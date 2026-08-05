@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace conways_game_of_life
 {
     public class Map
@@ -7,6 +9,9 @@ namespace conways_game_of_life
         public int numStartLiveCells { get; set;} = 6;
         public List<Cell> _cells {get; set;} = new List<Cell>();
         public List<Cell> _nextGenCells {get; set;} = new List<Cell>();
+        public string dumpFolderPath {get; set;} = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps");
+        public bool enableAutonomousGeneration {get; set;} = false;
+        public int autonomousGenerationRuns { get; set; } = 10;
 
         private Random _random = new Random();
 
@@ -14,6 +19,16 @@ namespace conways_game_of_life
         {
             SetupCells();
             SetupRandomLiveCells();
+            dumpFolderPath = Path.Combine(dumpFolderPath, _random.Next().ToString());
+        }
+
+        public Map(string DumpFolderPath, bool EnableAutonomousGeneration, int AutonomousGenerationRuns)
+        {
+            SetupCells();
+            SetupRandomLiveCells();
+            dumpFolderPath = Path.Combine(DumpFolderPath, _random.Next().ToString());
+            enableAutonomousGeneration = EnableAutonomousGeneration;
+            autonomousGenerationRuns = AutonomousGenerationRuns;
         }
 
         public Map(int SizeX, int SizeY, List<Cell> cells)
@@ -23,6 +38,7 @@ namespace conways_game_of_life
             _cells = cells;
 
             SetupRandomLiveCells();
+            dumpFolderPath = Path.Combine(dumpFolderPath, _random.Next().ToString());
         }
 
         private void SetupCells()
@@ -68,7 +84,24 @@ namespace conways_game_of_life
 
         public void Draw()
         {
-            for(int y = 0; y < sizeY; y++)
+            if (enableAutonomousGeneration)
+            {
+                if (autonomousGenerationRuns > 0)
+                {
+                    autonomousGenerationRuns--;
+                    DumpMapState();
+                }
+                else if (autonomousGenerationRuns == 0)
+                {
+                    Environment.Exit(0);
+                }
+                else if (autonomousGenerationRuns == -1)
+                {
+                    DumpMapState();
+                }
+            }
+
+            for (int y = 0; y < sizeY; y++)
             {
                 for(int x = 0; x < sizeX; x++)
                 {
@@ -91,6 +124,8 @@ namespace conways_game_of_life
             }
         }
 
+
+
         public void DoNextGeneration()
         {
             _nextGenCells = _cells.Select(c => new Cell(c.coorX, c.coorY) { isLive = c.isLive }).ToList();
@@ -100,7 +135,6 @@ namespace conways_game_of_life
                 List<Cell> neighbours = GetNeighbourCells(cell);
                 ApplyRulesToCell(cell, neighbours);
             }
-
             _cells = _nextGenCells;
         }
 
@@ -156,6 +190,63 @@ namespace conways_game_of_life
             {
                 _nextGenCells.FirstOrDefault(c => c.coorX == currentCell.coorX && c.coorY == currentCell.coorY).isLive = true;
             }
+        }
+
+        public void DumpMapState()
+        {
+            if (!Directory.Exists(dumpFolderPath))
+            {
+                Directory.CreateDirectory(dumpFolderPath);
+            }
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string dumpFilePath = Path.Combine(dumpFolderPath, $"MapDump_{timestamp}_{_random.Next(0, 1001)}.json");
+
+            var saveData = new MapSaveData
+            {
+                SizeX = this.sizeX,
+                SizeY = this.sizeY,
+                LiveCells = _cells.Where(c => c.isLive)
+                          .Select(c => new Coordinate { X = c.coorX, Y = c.coorY })
+                          .ToList()
+            };
+
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            string jsonString = JsonSerializer.Serialize(saveData, options);
+            File.WriteAllText(dumpFilePath, jsonString);
+        }
+
+        public void LoadFromFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine($"File not found: {filePath}");
+                return;
+            }
+            string jsonString = File.ReadAllText(filePath);
+            var saveData = JsonSerializer.Deserialize<MapSaveData>(jsonString);
+            if (saveData != null)
+            {
+                sizeX = saveData.SizeX;
+                sizeY = saveData.SizeY;
+                _cells.Clear();
+                for (int x = 0; x < sizeX; x++)
+                {
+                    for (int y = 0; y < sizeY; y++)
+                    {
+                        _cells.Add(new Cell(x, y));
+                    }
+                }
+                foreach (var liveCell in saveData.LiveCells)
+                {
+                    var cell = _cells.FirstOrDefault(c => c.coorX == liveCell.X && c.coorY == liveCell.Y);
+                    if (cell != null)
+                    {
+                        cell.isLive = true;
+                    }
+                }
+            }
+
+            Draw();
         }
     }
 }
