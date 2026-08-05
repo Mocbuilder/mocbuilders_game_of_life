@@ -4,7 +4,9 @@ namespace conways_game_of_life
     {
         public int sizeX {get; set;} = 10;
         public int sizeY {get; set;} = 10;
-        public static List<Cell> _cells {get; set;} = new List<Cell>();
+        public int numStartLiveCells { get; set;} = 6;
+        public List<Cell> _cells {get; set;} = new List<Cell>();
+        public List<Cell> _nextGenCells {get; set;} = new List<Cell>();
 
         private Random _random = new Random();
 
@@ -25,9 +27,9 @@ namespace conways_game_of_life
 
         private void SetupCells()
         {
-            for(int x = 0; x < 10; x++)
+            for(int x = 0; x < sizeX; x++)
             {
-                for(int y = 0; y < 10; y++)
+                for(int y = 0; y < sizeY; y++)
                 {
                     _cells.Add(new Cell(x, y));
                 }
@@ -36,30 +38,32 @@ namespace conways_game_of_life
 
         private void SetupRandomLiveCells()
         {
-            for(int i= 0; i < 6; i++)
-            {
-                var randomCoors = GetUnusedRandomCoordinates(0, 9);
-                Cell currentCell = _cells.FirstOrDefault(obj => obj.coorX == randomCoors.coorX && obj.coorY == randomCoors.coorY);
-                currentCell.isLive = true;
-            }
-        }
+            // Pick a completely random starting anchor anywhere on the map,
+            // leaving a 1-cell buffer so the cluster offsets don't immediately crash into boundaries.
+            int centerX = _random.Next(1, sizeX - 1);
+            int centerY = _random.Next(1, sizeY - 1);
 
-        private (int coorX, int coorY) GetUnusedRandomCoordinates(int min, int max)
-        {
-            int tempX = 0;
-            int tempY = 0;
-            while(true)
+            // Turn on the random anchor cell
+            var centerCell = _cells.FirstOrDefault(obj => obj.coorX == centerX && obj.coorY == centerY);
+            if (centerCell != null) centerCell.isLive = true;
+
+            // Spawn the remaining live cells tightly clustered within a 3x3 area around that anchor
+            int spawned = 1;
+            while (spawned < numStartLiveCells)
             {
-                tempX = _random.Next(min, max);
-                tempY = _random.Next(min, max);
-                
-                if(_cells.FirstOrDefault(obj => obj.coorX == tempX && obj.coorY == tempY && obj.isLive) == null)
+                int offsetX = _random.Next(-1, 2); // -1, 0, or 1
+                int offsetY = _random.Next(-1, 2);
+
+                int targetX = (centerX + offsetX + sizeX) % sizeX; // Handles wrapping safely if it hits an edge
+                int targetY = (centerY + offsetY + sizeY) % sizeY;
+
+                var targetCell = _cells.FirstOrDefault(obj => obj.coorX == targetX && obj.coorY == targetY);
+                if (targetCell != null && !targetCell.isLive)
                 {
-                    break;
+                    targetCell.isLive = true;
+                    spawned++;
                 }
             }
-
-            return (tempX, tempY);
         }
 
         public void Draw()
@@ -89,28 +93,40 @@ namespace conways_game_of_life
 
         public void DoNextGeneration()
         {
-            foreach(Cell cell in _cells)
+            _nextGenCells = _cells.Select(c => new Cell(c.coorX, c.coorY) { isLive = c.isLive }).ToList();
+
+            foreach (Cell cell in _cells)
             {
                 List<Cell> neighbours = GetNeighbourCells(cell);
                 ApplyRulesToCell(cell, neighbours);
             }
+
+            _cells = _nextGenCells;
         }
 
-        private static List<Cell> GetNeighbourCells(Cell currentCell)
+        private List<Cell> GetNeighbourCells(Cell currentCell)
         {
-            return new List<Cell>
+            int[] offsets = { -1, 0, 1 };
+            var neighbours = new List<Cell>();
+
+            foreach (int dx in offsets)
             {
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX     && obj.coorY == currentCell.coorY + 1),
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX + 1 && obj.coorY == currentCell.coorY + 1),
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX - 1 && obj.coorY == currentCell.coorY + 1),
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX     && obj.coorY == currentCell.coorY - 1),
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX + 1 && obj.coorY == currentCell.coorY - 1),
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX - 1 && obj.coorY == currentCell.coorY - 1),
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX + 1 && obj.coorY == currentCell.coorY),
-                _cells.FirstOrDefault(obj => obj.coorX == currentCell.coorX - 1 && obj.coorY == currentCell.coorY)
+                foreach (int dy in offsets)
+                {
+                    if (dx == 0 && dy == 0) continue;
+
+                    int neighborX = (currentCell.coorX + dx + sizeX) % sizeX;
+                    int neighborY = (currentCell.coorY + dy + sizeY) % sizeY;
+
+                    var neighbor = _cells.FirstOrDefault(obj => obj.coorX == neighborX && obj.coorY == neighborY);
+                    if (neighbor != null)
+                    {
+                        neighbours.Add(neighbor);
+                    }
+                }
             }
-            .Where(cell => cell != null)
-            .ToList();
+
+            return neighbours;
         }
 
         private void ApplyRulesToCell(Cell currentCell, List<Cell> neighbours)
@@ -133,12 +149,12 @@ namespace conways_game_of_life
 
             if(currentCell.isLive && liveNeighbours < 2 || currentCell.isLive && liveNeighbours > 3)
             {
-                currentCell.isLive = false;
+                _nextGenCells.FirstOrDefault(c => c.coorX == currentCell.coorX && c.coorY == currentCell.coorY).isLive = false;
             }
 
-            if(!currentCell.isLive && liveNeighbours == 2)
+            if(!currentCell.isLive && liveNeighbours == 3)
             {
-                currentCell.isLive = true;
+                _nextGenCells.FirstOrDefault(c => c.coorX == currentCell.coorX && c.coorY == currentCell.coorY).isLive = true;
             }
         }
     }

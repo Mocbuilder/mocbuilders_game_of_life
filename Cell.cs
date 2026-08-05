@@ -6,6 +6,10 @@ namespace conways_game_of_life
         public int coorY = 0;
         public bool isLive = false;
 
+        public Cell()
+        {
+        }
+
         public Cell(int x, int y)
         {
             coorX = x;

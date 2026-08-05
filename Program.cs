@@ -8,7 +8,7 @@ namespace conways_game_of_life
             Map map = new Map();
             map.Draw();
 
-            Console.WriteLine("Press ENTER for next generation. Press Ctrl+C to exit.");
+            Console.WriteLine("Press ENTER for next generation. Press R for Restart. Press Ctrl+C to exit.");
 
             while (true)
             {
@@ -17,6 +17,12 @@ namespace conways_game_of_life
                 if(keyInfo.Key == ConsoleKey.Enter)
                 {
                     map.DoNextGeneration();
+                    Console.Clear();
+                    map.Draw();
+                }
+                if (keyInfo.Key == ConsoleKey.R)
+                {
+                    map = new Map();
                     Console.Clear();
                     map.Draw();
                 }
