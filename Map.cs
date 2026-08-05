@@ -8,7 +8,9 @@ namespace conways_game_of_life
         public int sizeY {get; set;} = 10;
         public int numStartLiveCells { get; set;} = 6;
         public List<Cell> _cells {get; set;} = new List<Cell>();
-        public List<Cell> _nextGenCells {get; set;} = new List<Cell>();
+        private List<Cell> _nextGenCells {get; set;} = new List<Cell>();
+        private List<Cell> _oldGenCells {get; set;} = new List<Cell>();
+        private string baseDumpFolderPath {get; set;} = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps");
         public string dumpFolderPath {get; set;} = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps");
         public bool enableAutonomousGeneration {get; set;} = false;
         public int autonomousGenerationRuns { get; set; } = 10;
@@ -26,7 +28,7 @@ namespace conways_game_of_life
         {
             SetupCells();
             SetupRandomLiveCells();
-            dumpFolderPath = Path.Combine(DumpFolderPath, _random.Next().ToString());
+            dumpFolderPath = Path.Combine(baseDumpFolderPath, _random.Next().ToString());
             enableAutonomousGeneration = EnableAutonomousGeneration;
             autonomousGenerationRuns = AutonomousGenerationRuns;
         }
@@ -97,7 +99,17 @@ namespace conways_game_of_life
                 }
                 else if (autonomousGenerationRuns == -1)
                 {
-                    DumpMapState();
+                    if (CheckMapHealth())
+                    {
+                        DumpMapState();
+                    }
+                    else
+                    {
+                        _cells.Clear();
+                        SetupCells();
+                        SetupRandomLiveCells();
+                        dumpFolderPath = Path.Combine(baseDumpFolderPath, _random.Next().ToString());
+                    }
                 }
             }
 
@@ -129,6 +141,7 @@ namespace conways_game_of_life
         public void DoNextGeneration()
         {
             _nextGenCells = _cells.Select(c => new Cell(c.coorX, c.coorY) { isLive = c.isLive }).ToList();
+            _oldGenCells = _cells.Select(c => new Cell(c.coorX, c.coorY) { isLive = c.isLive }).ToList();
 
             foreach (Cell cell in _cells)
             {
@@ -199,7 +212,7 @@ namespace conways_game_of_life
                 Directory.CreateDirectory(dumpFolderPath);
             }
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            string dumpFilePath = Path.Combine(dumpFolderPath, $"MapDump_{timestamp}_{_random.Next(0, 1001)}.json");
+            string dumpFilePath = Path.Combine(dumpFolderPath, $"MapDump_{timestamp}_{_random.Next(0, 999999999)}.json");
 
             var saveData = new MapSaveData
             {
@@ -247,6 +260,37 @@ namespace conways_game_of_life
             }
 
             Draw();
+        }
+
+        private bool CheckMapHealth()
+        {
+            // If everything died, map is unhealthy
+            if (!_cells.Any(c => c.isLive))
+            {
+                return false;
+            }
+
+            // Check if the board has frozen (no cells changed state from the old generation)
+            bool hasChanged = false;
+            for (int i = 0; i < _cells.Count; i++)
+            {
+                var current = _cells[i];
+                var old = _oldGenCells.FirstOrDefault(c => c.coorX == current.coorX && c.coorY == current.coorY);
+
+                if (old != null && current.isLive != old.isLive)
+                {
+                    hasChanged = true;
+                    break;
+                }
+            }
+
+            // If nothing changed, it's a frozen still life/oscillator loop -> unhealthy
+            if (!hasChanged)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
