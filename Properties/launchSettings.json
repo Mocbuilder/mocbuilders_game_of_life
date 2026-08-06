@@ -10,6 +10,10 @@
     "sandbox w/ dump and survival": {
       "commandName": "Project",
       "commandLineArgs": "sandbox --enable-autonomous-survival"
+    },
+    "sandboy w/d&as 20x10": {
+      "commandName": "Project",
+      "commandLineArgs": "sandbox --sizex 20 --sizey 10 --enable-autonomous-survival"
     }
   }
 }

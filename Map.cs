@@ -20,19 +20,23 @@ namespace conways_game_of_life
 
         public Map()
         {
+            dumpFolderPath = Path.Combine(dumpFolderPath, _random.Next().ToString());
+
             SetupCells();
             SetupRandomLiveCells();
-            dumpFolderPath = Path.Combine(dumpFolderPath, _random.Next().ToString());
         }
 
-        public Map(string DumpFolderPath, bool EnableAutonomousGeneration, bool EnableAutonomousSurvival, int AutonomousGenerationRuns)
+        public Map(int SizeX, int SizeY, string DumpFolderPath, bool EnableAutonomousGeneration, bool EnableAutonomousSurvival, int AutonomousGenerationRuns)
         {
-            SetupCells();
-            SetupRandomLiveCells();
+            sizeX = SizeX;
+            sizeY = SizeY;
             dumpFolderPath = Path.Combine(baseDumpFolderPath, _random.Next().ToString());
             enableAutonomousGeneration = EnableAutonomousGeneration;
             enableAutonomousSurvival = EnableAutonomousSurvival;
             autonomousGenerationRuns = AutonomousGenerationRuns;
+
+            SetupCells();
+            SetupRandomLiveCells();
         }
 
         public Map(int SizeX, int SizeY, List<Cell> cells)
@@ -40,9 +44,9 @@ namespace conways_game_of_life
             sizeX = SizeX;
             sizeY = SizeY;
             _cells = cells;
+            dumpFolderPath = Path.Combine(dumpFolderPath, _random.Next().ToString());
 
             SetupRandomLiveCells();
-            dumpFolderPath = Path.Combine(dumpFolderPath, _random.Next().ToString());
         }
 
         private void SetupCells()
