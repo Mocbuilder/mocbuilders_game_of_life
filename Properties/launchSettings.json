@@ -6,6 +6,10 @@
     "sandbox": {
       "commandName": "Project",
       "commandLineArgs": "sandbox"
+    },
+    "sandbox w/ dump and survival": {
+      "commandName": "Project",
+      "commandLineArgs": "sandbox --enable-autonomous-survival"
     }
   }
 }

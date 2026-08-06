@@ -10,6 +10,7 @@ namespace conways_game_of_life
             string dumpBasefolder = "";
             int generationsCount = 10;
             bool enableAutonomousGeneration = false;
+            bool enableAutonomousSurvival = false;
 
             var fileToReadArgument = new Argument<string>("file-to-read")
             {
@@ -21,15 +22,32 @@ namespace conways_game_of_life
                 Description = "Root Folder for Map Save Dumps"
             };
 
+            var dumpFolderPathOption = new Option<string>("--dumpfolder")
+            {
+                Description = "Root Folder for Map Save Dumps",
+                Required = false,
+                DefaultValueFactory = _ => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps")
+            };
+
+            var enableAutonomousSurvivalOption = new Option<bool>("--enable-autonomous-survival")
+            {
+                Description = "Enable autonomous survival mode. If enabled, the simulation will add one cell every generation in a autonomously chosen best location to try and survive as long as possible.",
+                Required = false,
+                DefaultValueFactory = _ => false
+            };
+
             var generationsCountArgument = new Argument<int>("generations-count")
             {
                 Description = "Number of generations to run. '-1' is unlimited."
             };
 
             var sandboxCommand = new Command("sandbox", "Run the simulation in sandbox mode");
+            sandboxCommand.Options.Add(dumpFolderPathOption);
+            sandboxCommand.Options.Add(enableAutonomousSurvivalOption);
 
             var autonomousCommand = new Command("autonomous", "Run the simulation in autonomous mode");
             autonomousCommand.Arguments.Add(dumpFolderPathArgument);
+            autonomousCommand.Options.Add(enableAutonomousSurvivalOption);
             autonomousCommand.Arguments.Add(generationsCountArgument);
 
             var readCommand = new Command("read", "Read a Map Save Dump file");
@@ -44,28 +62,40 @@ namespace conways_game_of_life
 
             sandboxCommand.SetAction(parseResult =>
             {
+                enableAutonomousSurvival = parseResult.GetValue(enableAutonomousSurvivalOption);
+                dumpBasefolder = parseResult.GetValue(dumpFolderPathOption)!;
+
                 Console.Clear();
-                map.Draw();
-            });
-
-            autonomousCommand.SetAction(parseResult =>
-            {
-                enableAutonomousGeneration = true;
-                Console.Clear();
-                Console.WriteLine("Autonomous Mode");
-
-                dumpBasefolder = parseResult.GetValue(dumpFolderPathArgument)!;
-                generationsCount = parseResult.GetValue(generationsCountArgument);
-
-                Console.WriteLine($"Settings: \nBase Dump folder path: {dumpBasefolder}\nNumber of Generations: {generationsCount}");
-
+                Console.WriteLine("Sandbox Mode");
+                Console.WriteLine($"Settings: \nBase Dump folder path: {dumpBasefolder}\nEnable autonomous survival: {enableAutonomousSurvival}");
                 Console.WriteLine("Continue ? [Y/N]");
                 if (Console.ReadKey().Key != ConsoleKey.Y)
                 {
                     Environment.Exit(0);
                 }
 
-                map = new Map(dumpBasefolder, enableAutonomousGeneration, generationsCount);
+                Console.Clear();
+                map.Draw();
+            });
+
+            autonomousCommand.SetAction(parseResult =>
+            {
+                enableAutonomousSurvival = parseResult.GetValue(enableAutonomousSurvivalOption);
+                enableAutonomousGeneration = true;
+                dumpBasefolder = parseResult.GetValue(dumpFolderPathArgument)!;
+                generationsCount = parseResult.GetValue(generationsCountArgument);
+
+                Console.Clear();
+                Console.WriteLine("Autonomous Mode");
+                Console.WriteLine($"Settings: \nBase Dump folder path: {dumpBasefolder}\nNumber of Generations: {generationsCount}");
+                Console.WriteLine("Continue ? [Y/N]");
+                if (Console.ReadKey().Key != ConsoleKey.Y)
+                {
+                    Environment.Exit(0);
+                }
+
+                Console.Clear();
+                map = new Map(dumpBasefolder, enableAutonomousGeneration, enableAutonomousSurvival, generationsCount);
                 map.Draw();
             });
 

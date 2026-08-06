@@ -2,8 +2,8 @@ namespace conways_game_of_life
 {
     public class Cell
     {
-        public int coorX = 0;
-        public int coorY = 0;
+        public int coorX { get; set; } = -1;
+        public int coorY { get; set; } = -1;
         public bool isLive = false;
 
         public Cell()

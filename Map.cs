@@ -25,12 +25,13 @@ namespace conways_game_of_life
             dumpFolderPath = Path.Combine(dumpFolderPath, _random.Next().ToString());
         }
 
-        public Map(string DumpFolderPath, bool EnableAutonomousGeneration, int AutonomousGenerationRuns)
+        public Map(string DumpFolderPath, bool EnableAutonomousGeneration, bool EnableAutonomousSurvival, int AutonomousGenerationRuns)
         {
             SetupCells();
             SetupRandomLiveCells();
             dumpFolderPath = Path.Combine(baseDumpFolderPath, _random.Next().ToString());
             enableAutonomousGeneration = EnableAutonomousGeneration;
+            enableAutonomousSurvival = EnableAutonomousSurvival;
             autonomousGenerationRuns = AutonomousGenerationRuns;
         }
 
@@ -151,7 +152,7 @@ namespace conways_game_of_life
 
             if (enableAutonomousSurvival)
             {
-                Cell bestNewCell = AutoHandler.GetBestNewCell(_cells, this);
+                Cell? bestNewCell = AutoHandler.GetBestNewCell(_cells, this);
                 if (bestNewCell != null)
                 {
                     bestNewCell.isLive = true;
