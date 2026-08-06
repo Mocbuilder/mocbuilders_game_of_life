@@ -4,15 +4,16 @@ namespace conways_game_of_life
 {
     public class Map
     {
-        public int sizeX {get; set;} = 10;
-        public int sizeY {get; set;} = 10;
-        public int numStartLiveCells { get; set;} = 6;
-        public List<Cell> _cells {get; set;} = new List<Cell>();
-        private List<Cell> _nextGenCells {get; set;} = new List<Cell>();
-        private List<Cell> _oldGenCells {get; set;} = new List<Cell>();
-        private string baseDumpFolderPath {get; set;} = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps");
-        public string dumpFolderPath {get; set;} = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps");
-        public bool enableAutonomousGeneration {get; set;} = false;
+        public int sizeX { get; set; } = 10;
+        public int sizeY { get; set; } = 10;
+        public int numStartLiveCells { get; set; } = 6;
+        public List<Cell> _cells { get; set; } = new List<Cell>();
+        private List<Cell> _nextGenCells { get; set; } = new List<Cell>();
+        private List<Cell> _oldGenCells { get; set; } = new List<Cell>();
+        private string baseDumpFolderPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps");
+        public string dumpFolderPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "ConwaysGameOfLifeDumps");
+        public bool enableAutonomousGeneration { get; set; } = false;
+        public bool enableAutonomousSurvival { get; set; } = false;
         public int autonomousGenerationRuns { get; set; } = 10;
 
         private Random _random = new Random();
@@ -45,9 +46,9 @@ namespace conways_game_of_life
 
         private void SetupCells()
         {
-            for(int x = 0; x < sizeX; x++)
+            for (int x = 0; x < sizeX; x++)
             {
-                for(int y = 0; y < sizeY; y++)
+                for (int y = 0; y < sizeY; y++)
                 {
                     _cells.Add(new Cell(x, y));
                 }
@@ -115,11 +116,11 @@ namespace conways_game_of_life
 
             for (int y = 0; y < sizeY; y++)
             {
-                for(int x = 0; x < sizeX; x++)
+                for (int x = 0; x < sizeX; x++)
                 {
                     Cell currentCell = _cells.FirstOrDefault(c => c.coorX == x && c.coorY == y);
 
-                    if(currentCell.isLive)
+                    if (currentCell.isLive)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write("███");
@@ -136,8 +137,6 @@ namespace conways_game_of_life
             }
         }
 
-
-
         public void DoNextGeneration()
         {
             _nextGenCells = _cells.Select(c => new Cell(c.coorX, c.coorY) { isLive = c.isLive }).ToList();
@@ -145,36 +144,47 @@ namespace conways_game_of_life
 
             foreach (Cell cell in _cells)
             {
-                List<Cell> neighbours = GetNeighbourCells(cell);
+                List<Cell> neighbours = CellHandler.GetNeighbourCells(cell, _cells, new int[] { -1, 0, 1 }, this);
                 ApplyRulesToCell(cell, neighbours);
             }
             _cells = _nextGenCells;
-        }
 
-        private List<Cell> GetNeighbourCells(Cell currentCell)
-        {
-            int[] offsets = { -1, 0, 1 };
-            var neighbours = new List<Cell>();
-
-            foreach (int dx in offsets)
+            if (enableAutonomousSurvival)
             {
-                foreach (int dy in offsets)
+                Cell bestNewCell = AutoHandler.GetBestNewCell(_cells, this);
+                if (bestNewCell != null)
                 {
-                    if (dx == 0 && dy == 0) continue;
-
-                    int neighborX = (currentCell.coorX + dx + sizeX) % sizeX;
-                    int neighborY = (currentCell.coorY + dy + sizeY) % sizeY;
-
-                    var neighbor = _cells.FirstOrDefault(obj => obj.coorX == neighborX && obj.coorY == neighborY);
-                    if (neighbor != null)
-                    {
-                        neighbours.Add(neighbor);
-                    }
+                    bestNewCell.isLive = true;
                 }
             }
-
-            return neighbours;
         }
+
+        /*
+                private List<Cell> GetNeighbourCells(Cell currentCell)
+                {
+                    int[] offsets = { -1, 0, 1 };
+                    var neighbours = new List<Cell>();
+
+                    foreach (int dx in offsets)
+                    {
+                        foreach (int dy in offsets)
+                        {
+                            if (dx == 0 && dy == 0) continue;
+
+                            int neighborX = (currentCell.coorX + dx + sizeX) % sizeX;
+                            int neighborY = (currentCell.coorY + dy + sizeY) % sizeY;
+
+                            var neighbor = _cells.FirstOrDefault(obj => obj.coorX == neighborX && obj.coorY == neighborY);
+                            if (neighbor != null)
+                            {
+                                neighbours.Add(neighbor);
+                            }
+                        }
+                    }
+
+                    return neighbours;
+                }
+        */
 
         private void ApplyRulesToCell(Cell currentCell, List<Cell> neighbours)
         {
@@ -188,18 +198,18 @@ namespace conways_game_of_life
             int liveNeighbours = 0;
             foreach (Cell cell in neighbours)
             {
-                if(cell.isLive)
+                if (cell.isLive)
                 {
                     liveNeighbours++;
                 }
             }
 
-            if(currentCell.isLive && liveNeighbours < 2 || currentCell.isLive && liveNeighbours > 3)
+            if (currentCell.isLive && liveNeighbours < 2 || currentCell.isLive && liveNeighbours > 3)
             {
                 _nextGenCells.FirstOrDefault(c => c.coorX == currentCell.coorX && c.coorY == currentCell.coorY).isLive = false;
             }
 
-            if(!currentCell.isLive && liveNeighbours == 3)
+            if (!currentCell.isLive && liveNeighbours == 3)
             {
                 _nextGenCells.FirstOrDefault(c => c.coorX == currentCell.coorX && c.coorY == currentCell.coorY).isLive = true;
             }

@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "conways game of life": {
+      "commandName": "Project"
+    },
+    "sandbox": {
+      "commandName": "Project",
+      "commandLineArgs": "sandbox"
+    }
+  }
+}
