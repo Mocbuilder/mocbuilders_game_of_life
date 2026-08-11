@@ -133,3 +133,9 @@ Prerequisites
    - Self-contained single-file (no runtime required):
      - `dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish`  
    - Replace `win-x64` with your target RID (`linux-x64`, `osx-x64`, etc.). After publish, run `./publish/conways_game_of_life.exe sandbox` (or the equivalent executable).
+
+## License
+Mocbuilder's Game of Life  Copyright (C) 2026  Mocbuilder
+
+This program is licensed under the GNU General Public License v3.0 (GPLv3). You may redistribute and/or modify it under the terms of the GPLv3 as published by the Free Software Foundation.
+For details, see the LICENSE file included in this repository or visit https://www.gnu.org/licenses/gpl-3.0.en.html.

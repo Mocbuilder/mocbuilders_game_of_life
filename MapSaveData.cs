@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace conways_game_of_life
+namespace mocbuilders_game_of_life
 {
     public class MapSaveData
     {

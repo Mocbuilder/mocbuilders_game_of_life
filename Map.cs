@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace conways_game_of_life
+namespace mocbuilders_game_of_life
 {
     public class Map
     {

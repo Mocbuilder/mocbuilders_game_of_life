@@ -1,11 +1,23 @@
-﻿using System.CommandLine;
+﻿// Copyright (C) 2026 Mocbuilder
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-namespace conways_game_of_life
+using System.CommandLine;
+
+namespace mocbuilders_game_of_life
 {
     public class Program
     {
         public static int Main(string[] args)
         {
+            Console.WriteLine("Mocbuilder's Game of Life");
+            Console.WriteLine("Copyright (C) 2026 Mocbuilder");
+            Console.WriteLine("This program comes with ABSOLUTELY NO WARRANTY.");
+            Console.WriteLine("This is free software under GNU GPLv3; see LICENSE for details.\n");
+
             int sizeX = 10;
             int sizeY = 10;
             string dumpBasefolder = "";
