@@ -105,7 +105,7 @@ Prerequisites
 - Terminal: Command Prompt, PowerShell, or POSIX shell.
 
 ### Option A: Download latest release
-1. Visit: `https://github.com/Mocbuilder/mocbuilders_game_of_life/releases`.  
+1. Visit: https://github.com/Mocbuilder/mocbuilders_game_of_life/releases/latest.  
 2. Download the latest release  
 3. Extract to a folder.  
 4. Run:
