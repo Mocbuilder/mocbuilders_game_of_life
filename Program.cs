@@ -13,6 +13,7 @@ namespace mocbuilders_game_of_life
     {
         public static int Main(string[] args)
         {
+            Console.Clear();
             Console.WriteLine("Mocbuilder's Game of Life");
             Console.WriteLine("Copyright (C) 2026 Mocbuilder");
             Console.WriteLine("This program comes with ABSOLUTELY NO WARRANTY.");
@@ -99,7 +100,6 @@ namespace mocbuilders_game_of_life
                 sizeX = parseResult.GetValue(sizeXOption);
                 sizeY = parseResult.GetValue(sizeYOption);
 
-                Console.Clear();
                 Console.WriteLine("Sandbox Mode");
                 Console.WriteLine($"Settings: \nSizeX: {sizeX}\nSizeY: {sizeY}\nBase Dump folder path: {dumpBasefolder}\nEnable autonomous survival: {enableAutonomousSurvival}");
                 Console.WriteLine("Continue ? [Y/N]");
@@ -122,7 +122,6 @@ namespace mocbuilders_game_of_life
                 sizeX = parseResult.GetValue(sizeXOption);
                 sizeY = parseResult.GetValue(sizeYOption);
 
-                Console.Clear();
                 Console.WriteLine("Autonomous Mode");
                 Console.WriteLine($"Settings: \nSizeX: {sizeX}\nSizeY: {sizeY}\nBase Dump folder path: {dumpBasefolder}\nNumber of Generations: {generationsCount}");
                 Console.WriteLine("Continue ? [Y/N]");
